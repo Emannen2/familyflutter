@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "498464958075",
+    "project_id": "familytaskings",
+    "storage_bucket": "familytaskings.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:498464958075:android:de5f899af8d004ef4424de",
+        "android_client_info": {
+          "package_name": "com.example.familyapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "498464958075-rsv35h7mpjku410vvnrml9odl15pd98v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvrAwCuEQSLvbRCVBwOlV4I4g_UcR_oDU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "498464958075-rsv35h7mpjku410vvnrml9odl15pd98v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
