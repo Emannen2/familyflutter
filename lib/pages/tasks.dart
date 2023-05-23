@@ -25,13 +25,23 @@ class _TasksPageState extends State<TasksPage> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Colors.grey[100],
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(16),
                       bottomRight: Radius.circular(16),
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
+                    // boxShadow: const [
+                    //   BoxShadow(
+                    //     color: Colors.grey,
+                    //     blurRadius: 1,
+                    //     offset: Offset(
+                    //       5,
+                    //       0,
+                    //     ),
+                    //   ),
+                    // ],
                   ),
                   child: Row(
                     children: [

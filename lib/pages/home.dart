@@ -5,6 +5,7 @@ import 'package:familyapp/pages/analytics.dart';
 import 'package:familyapp/pages/tasks.dart';
 import 'package:familyapp/pages/shop.dart';
 import 'package:familyapp/pages/settings.dart';
+import 'package:familyapp/pages/warehouse.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
       TasksPage(),
 
       // Shop screen
-      ShopPage(),
+      ParentShop(),
 
       // Analysis screen
       AnalyticsPage(),

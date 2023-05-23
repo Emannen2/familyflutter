@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:familyapp/pages/home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:familyapp/auth.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -8,18 +11,23 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  Future<void> signOut() async {
+    await Auth().signOut();
+  }
+
+  Widget _signOutButton() {
+    return ElevatedButton(
+      onPressed: signOut,
+      child: const Text('Sign out'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFFDDBD1),
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDDBD1),
       body: Center(
-        child: Text(
-          'Settings',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: _signOutButton(),
       ),
     );
   }
