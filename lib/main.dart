@@ -1,9 +1,15 @@
-import 'package:familyapp/widget_tree.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:familyapp/pages/login.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-Future<void> main() async {
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/forgot_password_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/task_screen.dart';
+import 'screens/shop_screen.dart';
+import 'screens/settings_screen.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MyApp());
@@ -13,11 +19,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      title: 'Flutter Firebase App',
       theme: ThemeData(
-        primarySwatch: Colors.pink,
+        primarySwatch: Colors.blue,
       ),
-      home: const WidgetTree(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/forgot-password': (context) => ForgotPasswordScreen(),
+        '/home': (context) => HomeScreen(),
+        '/tasks': (context) => TaskScreen(),
+        '/shop': (context) => ShopScreen(),
+        '/settings': (context) => SettingsScreen(),
+      },
     );
   }
 }
