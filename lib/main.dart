@@ -5,8 +5,8 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/task_screen.dart';
-import 'screens/shop_screen.dart';
+import 'screens/task_screen.dart' as taskScreen;
+import 'screens/shop_screen.dart' as shopScreen;
 import 'screens/settings_screen.dart';
 
 void main() async {
@@ -16,6 +16,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,8 +31,8 @@ class MyApp extends StatelessWidget {
         '/register': (context) => RegisterScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
         '/home': (context) => HomeScreen(),
-        '/tasks': (context) => TaskScreen(),
-        '/shop': (context) => ShopScreen(),
+        '/tasks': (context) => taskScreen.TaskScreen(),
+        '/shop': (context) => shopScreen.ShopScreen(),
         '/settings': (context) => SettingsScreen(),
       },
     );

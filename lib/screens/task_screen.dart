@@ -3,6 +3,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+import 'points.dart';
+
 void main() {
   runApp(FamilyApp());
 }
@@ -44,7 +46,7 @@ class _TaskScreenState extends State<TaskScreen> {
     ),
   ];
 
-  int _totalPoints = 0;
+  int _totalPoints = Points.totalPoints;
   bool _isParentLoggedIn = false;
 
   void _addTask(Task newTask) {
@@ -74,8 +76,7 @@ class _TaskScreenState extends State<TaskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _totalPoints = _tasks.fold(
-        0, (sum, task) => sum + (task.isCompleted ? task.points : 0));
+    _totalPoints = Points.totalPoints;
 
     return Scaffold(
       appBar: AppBar(
@@ -128,51 +129,47 @@ class _TaskScreenState extends State<TaskScreen> {
                             onPressed: () {
                               setState(() {
                                 task.isCompleted = true;
+                                Points.totalPoints += task.points;
                               });
                               Navigator.of(ctx).pop();
                             },
-                            child: Text('Mark as Done'),
+                            child: Text('Confirm'),
                           ),
                         ],
                       ),
                     );
                   },
-                  leading: task.imageUrl != null
-                      ? SizedBox(
-                          width: 60,
-                          height: 60,
-                          child: Image.file(File(task.imageUrl!)),
-                        )
-                      : null,
-                  title: Text(task.title),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(task.description),
-                      Text('Points: ${task.points}'),
-                    ],
+                  leading: Checkbox(
+                    value: task.isCompleted,
+                    onChanged: (value) {
+                      setState(() {
+                        task.isCompleted = value ?? false;
+                      });
+                    },
                   ),
-                  trailing: task.isCompleted
-                      ? Icon(Icons.check_circle, color: Colors.green)
-                      : null,
+                  title: Text(task.title),
+                  subtitle: Text(task.description),
+                  trailing: Text('${task.points} pts'),
                 );
               },
             ),
           ),
+          if (_isParentLoggedIn)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AddTaskDialog(
+                      onAddTask: _addTask,
+                    ),
+                  );
+                },
+                child: Text('Add Task'),
+              ),
+            ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _isParentLoggedIn
-            ? () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => TaskDialog(
-                    onTaskAdded: _addTask,
-                  ),
-                );
-              }
-            : null,
-        child: Icon(Icons.add),
       ),
     );
   }
@@ -183,137 +180,17 @@ class Task {
   final String title;
   final String description;
   bool isCompleted;
-  String? imageUrl;
 
   Task({
     required this.points,
     required this.title,
     required this.description,
     this.isCompleted = false,
-    this.imageUrl,
   });
 }
 
-class TaskDialog extends StatefulWidget {
-  final void Function(Task) onTaskAdded;
-
-  TaskDialog({required this.onTaskAdded});
-
-  @override
-  _TaskDialogState createState() => _TaskDialogState();
-}
-
-class _TaskDialogState extends State<TaskDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _pointsController = TextEditingController();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  File? _selectedImage;
-
-  @override
-  void dispose() {
-    _pointsController.dispose();
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  void _selectImage() async {
-    final picker = ImagePicker();
-    final pickedImage = await picker.getImage(source: ImageSource.gallery);
-
-    if (pickedImage != null) {
-      setState(() {
-        _selectedImage = File(pickedImage.path);
-      });
-    }
-  }
-
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final points = int.parse(_pointsController.text);
-      final title = _titleController.text;
-      final description = _descriptionController.text;
-
-      final newTask = Task(
-        points: points,
-        title: title,
-        description: description,
-        imageUrl: _selectedImage?.path,
-      );
-
-      widget.onTaskAdded(newTask);
-      Navigator.of(context).pop();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Add Task'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _pointsController,
-              decoration: InputDecoration(labelText: 'Points'),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter the points';
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title'),
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter the title';
-                }
-                return null;
-              },
-            ),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
-              maxLines: 2,
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Please enter the description';
-                }
-                return null;
-              },
-            ),
-            ElevatedButton(
-              onPressed: _selectImage,
-              child: Text('Select Image'),
-            ),
-            if (_selectedImage != null) Image.file(_selectedImage!),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _submitForm,
-          child: Text('Add Task'),
-        ),
-      ],
-    );
-  }
-}
-
 class ParentLoginDialog extends StatefulWidget {
-  final void Function(String) onLogin;
+  final Function(String password) onLogin;
 
   ParentLoginDialog({required this.onLogin});
 
@@ -322,7 +199,6 @@ class ParentLoginDialog extends StatefulWidget {
 }
 
 class _ParentLoginDialogState extends State<ParentLoginDialog> {
-  final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
 
   @override
@@ -331,41 +207,103 @@ class _ParentLoginDialogState extends State<ParentLoginDialog> {
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final password = _passwordController.text;
-      widget.onLogin(password);
-    }
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Parent Login'),
+      content: TextField(
+        controller: _passwordController,
+        decoration: InputDecoration(labelText: 'Password'),
+        obscureText: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final password = _passwordController.text;
+            widget.onLogin(password);
+          },
+          child: Text('Login'),
+        ),
+      ],
+    );
+  }
+}
+
+class AddTaskDialog extends StatefulWidget {
+  final Function(Task newTask) onAddTask;
+
+  AddTaskDialog({required this.onAddTask});
+
+  @override
+  _AddTaskDialogState createState() => _AddTaskDialogState();
+}
+
+class _AddTaskDialogState extends State<AddTaskDialog> {
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _pointsController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _pointsController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Parent Login'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _passwordController,
-          decoration: InputDecoration(labelText: 'Password'),
-          obscureText: true,
-          validator: (value) {
-            if (value!.isEmpty) {
-              return 'Please enter the password';
-            }
-            return null;
-          },
-        ),
+      title: Text('Add Task'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _titleController,
+            decoration: InputDecoration(labelText: 'Title'),
+          ),
+          TextField(
+            controller: _descriptionController,
+            decoration: InputDecoration(labelText: 'Description'),
+          ),
+          TextField(
+            controller: _pointsController,
+            decoration: InputDecoration(labelText: 'Points'),
+            keyboardType: TextInputType.number,
+          ),
+        ],
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           child: Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _submitForm,
-          child: Text('Login'),
+          onPressed: () {
+            final title = _titleController.text;
+            final description = _descriptionController.text;
+            final points = int.tryParse(_pointsController.text) ?? 0;
+
+            if (title.isNotEmpty && description.isNotEmpty && points > 0) {
+              final newTask = Task(
+                points: points,
+                title: title,
+                description: description,
+              );
+
+              widget.onAddTask(newTask);
+              Navigator.of(context).pop();
+            } else {
+              Fluttertoast.showToast(
+                msg: 'Please enter valid values for all fields',
+              );
+            }
+          },
+          child: Text('Add'),
         ),
       ],
     );

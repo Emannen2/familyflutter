@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -12,6 +13,10 @@ class RegisterScreen extends StatelessWidget {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
+
+      // Send welcome email
+      await userCredential.user?.sendEmailVerification();
+
       if (userCredential.user != null) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
@@ -69,6 +74,25 @@ class RegisterScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Welcome Email Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: RegisterScreen(),
     );
   }
 }

@@ -1,5 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'points.dart';
+
+void main() {
+  runApp(FamilyApp());
+}
+
+class FamilyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Family App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: ShopScreen(),
+    );
+  }
+}
 
 class ShopScreen extends StatefulWidget {
   @override
@@ -7,164 +24,225 @@ class ShopScreen extends StatefulWidget {
 }
 
 class _ShopScreenState extends State<ShopScreen> {
-  List<Item> items = [];
+  List<Product> _products = [
+    Product(
+      name: 'Voi Pass',
+      price: 400,
+      description: '(Sponsored by Voi Technology)',
+      isPurchased: false,
+    ),
+    Product(
+      name: 'Max',
+      price: 360,
+      description: '€5 gift card at Max (Sponsored by Max Burgers)',
+      isPurchased: false,
+    ),
+    Product(
+      name: 'Nike',
+      price: 300,
+      description: '7% discount code at Nike (Sponsored by Nike Inc)',
+      isPurchased: false,
+    ),
+  ];
+
+  int _totalPoints = Points.totalPoints;
   bool _isParentLoggedIn = false;
 
-  void addItem() {
-    showDialog(
-      context: context,
-      builder: (ctx) => _isParentLoggedIn
-          ? AlertDialog(
-              title: Text('Add Item'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Title',
-                    ),
-                    onChanged: (value) =>
-                        setState(() => items.add(Item(title: value))),
-                  ),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Points Needed',
-                    ),
-                    onChanged: (value) => setState(
-                        () => items.last.pointsNeeded = int.parse(value)),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (items.last.title.isNotEmpty &&
-                        items.last.pointsNeeded > 0) {
-                      Navigator.of(ctx).pop();
-                    } else {
-                      Fluttertoast.showToast(
-                        msg: 'Please enter valid item details',
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                  },
-                  child: Text('Add'),
-                ),
-              ],
-            )
-          : AlertDialog(
-              title: Text('Parent Login Required'),
-              content: Text('Please log in as a parent to add items.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text('Close'),
-                ),
-              ],
+  void _buyProduct(Product product) {
+    if (_totalPoints >= product.price) {
+      setState(() {
+        _totalPoints -= product.price;
+        product.isPurchased = true;
+        Points.updatePoints(_totalPoints);
+      });
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Purchase Successful'),
+          content: Text('You bought ${product.name} for ${product.price} pts'),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('OK'),
             ),
-    );
+          ],
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Insufficient Points'),
+          content: Text('You do not have enough points to buy this product'),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
-  void buyItem(int index) {
-    setState(() => items[index].purchased = true);
+  void _loginAsParent(String password) {
+    if (password == 'Test123') {
+      setState(() {
+        _isParentLoggedIn = true;
+      });
+      Navigator.of(context).pop();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Logged in as Parent'),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Invalid Password'),
+          content: Text('Please enter the correct password.'),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
-  void _parentLogin() {
+  void _logoutAsParent() {
+    setState(() {
+      _isParentLoggedIn = false;
+    });
     showDialog(
       context: context,
-      builder: (ctx) => ParentLoginDialog(
-        onLogin: (password) {
-          if (password == 'Test123') {
-            setState(() {
-              _isParentLoggedIn = true;
-            });
-            Navigator.of(ctx).pop();
-          } else {
-            Fluttertoast.showToast(
-              msg: 'Incorrect password',
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-            );
-          }
-        },
+      builder: (ctx) => AlertDialog(
+        title: Text('Logged out'),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('OK'),
+          ),
+        ],
       ),
     );
   }
 
-  void _parentLogout() {
+  void _addProduct(Product newProduct) {
     setState(() {
-      _isParentLoggedIn = false;
+      _products.add(newProduct);
     });
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Product Added'),
+        content: Text('The product has been added successfully.'),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    _totalPoints = Points.totalPoints;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Shop'),
         actions: [
-          IconButton(
-            icon: Icon(_isParentLoggedIn ? Icons.logout : Icons.login),
-            onPressed: _isParentLoggedIn ? _parentLogout : _parentLogin,
-          ),
+          if (!_isParentLoggedIn)
+            IconButton(
+              icon: Icon(Icons.login),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => ParentLoginDialog(
+                    onLogin: _loginAsParent,
+                  ),
+                );
+              },
+            ),
+          if (_isParentLoggedIn)
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: _logoutAsParent,
+            ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (ctx, index) => ListTile(
-          title: Text(items[index].title),
-          trailing: Text('${items[index].pointsNeeded} pts'),
-          tileColor: items[index].purchased ? Colors.green[100] : null,
-          onTap: () {
-            if (_isParentLoggedIn) {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: Text('Confirm'),
-                  content: Text('Did the child complete this task?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text('No'),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('Total Points: $_totalPoints'),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _products.length,
+              itemBuilder: (ctx, index) {
+                final product = _products[index];
+                return ListTile(
+                  onTap:
+                      product.isPurchased ? null : () => _buyProduct(product),
+                  title: Text(
+                    product.name,
+                    style: TextStyle(
+                      color: product.isPurchased ? Colors.green : null,
                     ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          items[index].purchased = true;
-                        });
-                        Navigator.of(ctx).pop();
-                      },
-                      child: Text('Yes'),
+                  ),
+                  subtitle: Text(product.description),
+                  trailing: Text('${product.price} pts'),
+                );
+              },
+            ),
+          ),
+          if (_isParentLoggedIn)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AddProductDialog(
+                      onAddProduct: _addProduct,
                     ),
-                  ],
-                ),
-              );
-            }
-          },
-        ),
+                  );
+                },
+                child: Text('Add Product'),
+              ),
+            ),
+        ],
       ),
-      floatingActionButton: _isParentLoggedIn
-          ? FloatingActionButton(
-              onPressed: addItem,
-              child: Icon(Icons.add),
-            )
-          : null,
     );
   }
 }
 
-class Item {
-  String title;
-  int pointsNeeded;
-  bool purchased;
+class Product {
+  final String name;
+  final int price;
+  final String description;
+  bool isPurchased;
 
-  Item({required this.title, this.pointsNeeded = 0, this.purchased = false});
+  Product({
+    required this.name,
+    required this.price,
+    required this.description,
+    this.isPurchased = false,
+  });
 }
 
 class ParentLoginDialog extends StatefulWidget {
@@ -189,21 +267,20 @@ class _ParentLoginDialogState extends State<ParentLoginDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Parent Login'),
-      content: TextFormField(
+      content: TextField(
         controller: _passwordController,
-        obscureText: true,
         decoration: InputDecoration(labelText: 'Password'),
+        obscureText: true,
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           child: Text('Cancel'),
         ),
-        TextButton(
+        ElevatedButton(
           onPressed: () {
-            widget.onLogin(_passwordController.text);
+            final password = _passwordController.text;
+            widget.onLogin(password);
           },
           child: Text('Login'),
         ),
@@ -212,19 +289,89 @@ class _ParentLoginDialogState extends State<ParentLoginDialog> {
   }
 }
 
-void main() {
-  runApp(MyApp());
+class AddProductDialog extends StatefulWidget {
+  final Function(Product newProduct) onAddProduct;
+
+  AddProductDialog({required this.onAddProduct});
+
+  @override
+  _AddProductDialogState createState() => _AddProductDialogState();
 }
 
-class MyApp extends StatelessWidget {
+class _AddProductDialogState extends State<AddProductDialog> {
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _priceController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Task App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return AlertDialog(
+      title: Text('Add Product'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: InputDecoration(labelText: 'Name'),
+          ),
+          TextField(
+            controller: _descriptionController,
+            decoration: InputDecoration(labelText: 'Description'),
+          ),
+          TextField(
+            controller: _priceController,
+            decoration: InputDecoration(labelText: 'Price'),
+            keyboardType: TextInputType.number,
+          ),
+        ],
       ),
-      home: ShopScreen(),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final name = _nameController.text;
+            final description = _descriptionController.text;
+            final price = int.tryParse(_priceController.text) ?? 0;
+
+            if (name.isNotEmpty && description.isNotEmpty && price > 0) {
+              final newProduct = Product(
+                name: name,
+                description: description,
+                price: price,
+              );
+
+              widget.onAddProduct(newProduct);
+              Navigator.of(context).pop();
+            } else {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text('Invalid Input'),
+                  content: Text('Please enter valid values for all fields'),
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+          child: Text('Add'),
+        ),
+      ],
     );
   }
 }
